@@ -1,0 +1,13 @@
+{
+  "version": "0",
+  "id": "12345678-1234-1234-1234-123456789012",
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",
+  "account": "123456789012",
+  "time": "2025-10-21T23:00:00Z",
+  "region": "ap-northeast-1",
+  "resources": [
+    "arn:aws:events:ap-northeast-1:123456789012:rule/KintaiSlackBotDailyReminder"
+  ],
+  "detail": {}
+}

@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  kintai-slackbot
+  
+  Slack Reminder Bot for daily attendance notifications
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+    Runtime: nodejs20.x
+
+Parameters:
+  SlackBotToken:
+    Type: String
+    Description: Slack Bot User OAuth Token
+    NoEcho: true
+  
+  SlackSigningSecret:
+    Type: String
+    Description: Slack App Signing Secret
+    NoEcho: true
+  
+  SlackChannelId:
+    Type: String
+    Description: Slack Channel ID where reminders will be posted
+
+Resources:
+  KintaiSlackBotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: app.handler
+      Description: Slack Bot for daily attendance reminders
+      Environment:
+        Variables:
+          SLACK_BOT_TOKEN: !Ref SlackBotToken
+          SLACK_SIGNING_SECRET: !Ref SlackSigningSecret
+          SLACK_CHANNEL_ID: !Ref SlackChannelId
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+                - ssm:PutParameter
+              Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kintai-slackbot/*'
+      Events:
+        DailyReminder:
+          Type: Schedule
+          Properties:
+            Schedule: 'cron(0 23 * * ? *)'  # 8:00 AM JST = 11:00 PM UTC (previous day)
+            Description: Trigger daily reminder at 8:00 AM JST
+            Enabled: true
+        SlackEvents:
+          Type: HttpApi
+          Properties:
+            Path: /slack/events
+            Method: post
+
+  KintaiSlackBotFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt KintaiSlackBotFunction.Arn
+      AuthType: NONE
+
+  KintaiSlackBotFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref KintaiSlackBotFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+Outputs:
+  KintaiSlackBotFunction:
+    Description: "Kintai Slack Bot Lambda Function ARN"
+    Value: !GetAtt KintaiSlackBotFunction.Arn
+  
+  KintaiSlackBotFunctionUrl:
+    Description: "Lambda Function URL for Slack Events"
+    Value: !GetAtt KintaiSlackBotFunctionUrl.FunctionUrl
+  
+  KintaiSlackBotFunctionIamRole:
+    Description: "Implicit IAM Role created for Kintai Slack Bot function"
+    Value: !GetAtt KintaiSlackBotFunctionRole.Arn

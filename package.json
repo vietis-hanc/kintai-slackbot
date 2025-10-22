@@ -1,0 +1,22 @@
+{
+  "name": "kintai-slackbot",
+  "version": "1.0.0",
+  "description": "Slack Reminder Bot for daily attendance notifications",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "slack",
+    "bot",
+    "aws",
+    "lambda",
+    "reminder"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/bolt": "^3.17.1",
+    "aws-sdk": "^2.1543.0"
+  }
+}
